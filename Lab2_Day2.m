@@ -6,8 +6,10 @@ Signal = [0, 9.90E-05, 9.90E-06, 9.90E-07, 9.90E-08, 9.90E-09, 9.90E-10, ...
     9.90E-11, 9.90E-12, 9.90E-13];
 
 KR = 0.01*10^-6; %M
+
 %Vary the Hill coefficient from 1 to 4 to see how this effects the
 %switchlike behavior of the genetic circuit
+
 for n1 = 1:4
     
     percent_GFP = Equation1(KR, n1, Signal);
@@ -52,5 +54,41 @@ set(gca,'fontsize',16);
 
 %% M2
 
+pR = 0.5; %uM^-3/min
+dR = 0.0231; %1/min
+KR = 1.3E-5; %uM
+n1 = 1;
+LuxR = 0.1; %uM
+aGFP = 2; %1/min
+dGFP = 4E-4; %1/min
+aTXGFP = 0.05; %uM/min
+dTXGFP = 0.2; %1/min
 
-% Matt was here
+time = 0:1:2880;
+
+
+Signal = 10^6.*[0, 9.90E-05, 9.90E-06, 9.90E-07, 9.90E-08, 9.90E-09, 9.90E-10, ...
+    9.90E-11, 9.90E-12, 9.90E-13];
+
+for jj = 1:length(Signal)
+
+[t,C] = ode45(@system, time, [LuxR; 0; 0],[], aGFP, dGFP, n1, KR, aTXGFP, dTXGFP, pR,dR,....
+    LuxR,Signal(jj));
+
+equilibrium(jj) = C(end,end);
+
+end
+
+semilogx(Signal,equilibrium,'--o','linewidth',1.5);
+xlabel('AHL Concentration (uM)');
+ylabel('GFP Concentration (uM)');
+set(gca,'fontsize',16);
+title('Equilibrium Concentration of GFP as a Function of AHL Concentration');
+
+
+
+
+
+
+
+
