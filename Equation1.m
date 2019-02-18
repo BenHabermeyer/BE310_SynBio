@@ -13,5 +13,5 @@ Output(s):
 percent_GFP is percent expression
 %}
 
-percent_GFP = 1 / (1 + (KR / Signal)^n1);
+percent_GFP = 1 ./ (1 + (KR ./ Signal).^n1);
 end
