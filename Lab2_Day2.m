@@ -47,12 +47,14 @@ title('Percent GFP expression as function of KR')
 ylim([-0.2 1.2])
 xlabel('Log(AHL Concentration (M))');
 ylabel('Percent GFP Expression');
-leg = legend('KR = 10^-^5','KR = 10^-^6','KR = 10^-^7','KR = 10^-^8','KR = 10^-^9','KR = 10^-^1^0');
+leg = legend('KR = 10^-^5 M','KR = 10^-^6 M','KR = 10^-^7 M','KR = 10^-^8 M','KR = 10^-^9 M','KR = 10^-^1^0 M');
 set(leg,'location','northwest');
 set(gca,'fontsize',16);
 
 
 %% M2
+
+figure(3)
 
 pR = 0.5; %uM^-3/min
 dR = 0.0231; %1/min
@@ -83,7 +85,7 @@ semilogx(Signal,equilibrium,'--o','linewidth',1.5);
 xlabel('AHL Concentration (uM)');
 ylabel('GFP Concentration (uM)');
 set(gca,'fontsize',16);
-title('Equilibrium Concentration of GFP as a Function of AHL Concentration');
+title('GFP Equilibrium Concentration vs. AHL Concetration');
 
 
 
