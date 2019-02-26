@@ -156,19 +156,26 @@ aTXGFP = 0.05; %uM/min
 dTXGFP = 0.2; %1/min
 
 %Create a 3D matrix representing spatio-temporal cocnentrations of each of
-%the variables
-R1 = zeros(size(AHL));
-TXGFP1 = zeros(size(AHL));
+%the variables - to save memory have R1 and TXGFP be only size 2 - index 1
+%is previous and index 2 is current
+R1 = zeros(n, n, 2);
+TXGFP1 = zeros(n, n, 2);
 GFP1 = zeros(size(AHL));
+
+%THIS TAKES A WHILE - TRY REMOVING AHL OR RUN ON CLOUD
 
 %convert diffeqs into 2D FD
 for t = 1 : length(time) - 1
     for x = 1 : length(X)
         for y = 1 : length(Y)    
-            R1(x,y,t+1) = pR*(LuxR^2)*(AHL(x,y,t)^2) - dR*R1(x,y,t);
-            TXGFP1(x,y,t+1) = (aTXGFP*(R1(x,y,t)/KR)^n1) / (1 + (R1(x,y,t)/KR)^n1) ...
-                - dTXGFP*TXGFP1(x,y,t);
-            GFP1(x,y,t+1) = aGFP*TXGFP1(x,y,t) - dGFP*GFP1(x,y,t);
+            R1(x,y,2) = pR*(LuxR^2)*(AHL(x,y,t)^2) - dR*R1(x,y,1);
+            TXGFP1(x,y,2) = (aTXGFP*(R1(x,y,1)/KR)^n1) / (1 + (R1(x,y,1)/KR)^n1) ...
+                - dTXGFP*TXGFP1(x,y,1);
+            GFP1(x,y,t+1) = aGFP*TXGFP1(x,y,1) - dGFP*GFP1(x,y,t);
+            
+            %reset t index 1 for R1 and TXGFP
+            R1(:,:,1) = R1(:,:,2);
+            TXGFP1(:,:,1) = TXGFP1(:,:,2);
         end
     end
 end
