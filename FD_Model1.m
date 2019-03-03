@@ -160,82 +160,78 @@ dTXGFP = 0.2; %1/min
 %is previous and index 2 is current
 R1 = zeros(n, n, 2);
 TXGFP1 = zeros(n, n, 2);
-GFP1 = zeros(size(AHL));
+GFP1 = zeros(n, n, 2);
 
-%THIS TAKES A WHILE - TRY REMOVING AHL OR RUN ON CLOUD
+%get 2D GFP expression at only 25 times
+time_indices = linspace(1, length(time), 25);
+GFP_hour = zeros(n, n, 25);
+GFP_index = 1;
 
-%convert diffeqs into 2D FD
+%maximum GFP concentration in uM which will be used to set threshold
+max_GFP = 0;
+
+%Vectorized FD model - saves memory
+%I THINK THERE'S A BUG IN HERE IMA CHECK 
 for t = 1 : length(time) - 1
-    for x = 1 : length(X)
-        for y = 1 : length(Y)    
-            R1(x,y,2) = pR*(LuxR^2)*(AHL(x,y,t)^2) - dR*R1(x,y,1);
-            TXGFP1(x,y,2) = (aTXGFP*(R1(x,y,1)/KR)^n1) / (1 + (R1(x,y,1)/KR)^n1) ...
-                - dTXGFP*TXGFP1(x,y,1);
-            GFP1(x,y,t+1) = aGFP*TXGFP1(x,y,1) - dGFP*GFP1(x,y,t);
-            
-            %reset t index 1 for R1 and TXGFP
-            R1(:,:,1) = R1(:,:,2);
-            TXGFP1(:,:,1) = TXGFP1(:,:,2);
-        end
+    R1(:,:,2) = pR.*(LuxR^2).*(AHL(:,:,t).^2) - dR.*R1(:,:,1);
+    TXGFP1(:,:,2) = ((aTXGFP.*((R1(:,:,1)./KR).^n1)) ./ (ones(n) + (R1(:,:,1)./KR).^n1)) ...
+        - dTXGFP.*TXGFP1(:,:,1);
+    GFP1(:,:,2) = aGFP.*TXGFP1(:,:,1) - dGFP.*GFP1(:,:,1);
+    
+    %if t is one of the 25 indices we want, save the old GFP matrix
+    %given by the first z stack
+    if any(time_indices == t)
+        GFP_hour(:,:, GFP_index) = GFP1(:,:,1);
+        GFP_index = GFP_index + 1;
+    end
+    
+    %reset the max_GFP value
+    newmax = max(GFP1(:,:,2),[],'all');
+    if newmax > max_GFP
+        max_GFP = newmax;
+    end
+    
+    %reset t index 1 for R1 and TXGFP by setting the first z stack
+    %to be the second
+    R1(:,:,1) = R1(:,:,2);
+    TXGFP1(:,:,1) = TXGFP1(:,:,2);
+    GFP1(:,:,1) = GFP1(:,:,2);
+end
+%set the final time point
+GFP_hour(:,:,25) = GFP1(:,:,2);
+
+%for finding the edge distance, first set a threshold at which GFP
+%expression will be defined
+threshold_percent = 0.75;
+threshold_GFP = max_GFP * threshold_percent;
+
+%since diffusion will be symmetrical in all directions, do the same thing
+%as in M1 - look in the positive X direction only along the middle of the
+%plate to determine the edge distance at each time.
+edge_distance = zeros(1, 25);
+
+%first edge distance is 0
+for i = 1 : 25
+    if any(GFP_hour(101:end, 101, i) > threshold_GFP)
+        edge_distance(i) = xgrid(find(GFP_hour(101:end,101,i) > ...
+            threshold_GFP, 1, 'last') + 100);
+    else 
+        edge_distance(i) = 0;
     end
 end
 
+figure
+plot(0:24, edge_distance, 'o--')
+xlabel('time (hours)')
+ylabel('edge distance (mm)')
+title('Strain R1')
 
-%% Strain R2
-pR = 0.5; %uM^-3/min
-dR = 0.0231; %1/min
-KR = 3.68E-2; %uM
-n1 = 1.01;
-LuxR = 0.1; %uM
-aGFP = 2; %1/min
-dGFP = 4E-4; %1/min
-aTXGFP = 0.05; %uM/min
-dTXGFP = 0.2; %1/min
-
-%Create a 3D matrix representing spatio-temporal cocnentrations of each of
-%the variables
-R2 = zeros(size(AHL));
-TXGFP2 = zeros(size(AHL));
-GFP2 = zeros(size(AHL));
-
-%convert diffeqs into 2D FD
-for t = 1 : length(time) - 1
-    for x = 1 : length(X)
-        for y = 1 : length(Y)    
-            R2(x,y,t+1) = pR*(LuxR^2)*(AHL(x,y,t)^2) - dR*R2(x,y,t);
-            TXGFP2(x,y,t+1) = (aTXGFP*(R2(x,y,t)/KR)^n1) / (1 + (R2(x,y,t)/KR)^n1) ...
-                - dTXGFP*TXGFP2(x,y,t);
-            GFP2(x,y,t+1) = aGFP*TXGFP2(x,y,t) - dGFP*GFP2(x,y,t);
-        end
-    end
-end
-%% Strain R3
-pR = 0.5; %uM^-3/min
-dR = 0.0231; %1/min
-KR = 5.64E-3; %uM
-n1 = 0.93;
-LuxR = 0.1; %uM
-aGFP = 2; %1/min
-dGFP = 4E-4; %1/min
-aTXGFP = 0.05; %uM/min
-dTXGFP = 0.2; %1/min
-
-%Create a 3D matrix representing spatio-temporal cocnentrations of each of
-%the variables
-R3 = zeros(size(AHL));
-TXGFP3 = zeros(size(AHL));
-GFP3 = zeros(size(AHL));
-
-%convert diffeqs into 2D FD
-for t = 1 : length(time) - 1
-    for x = 1 : length(X)
-        for y = 1 : length(Y)    
-            R3(x,y,t+1) = pR*(LuxR^2)*(AHL(x,y,t)^2) - dR*R3(x,y,t);
-            TXGFP3(x,y,t+1) = (aTXGFP*(R3(x,y,t)/KR)^n1) / (1 + (R3(x,y,t)/KR)^n1) ...
-                - dTXGFP*TXGFP3(x,y,t);
-            GFP3(x,y,t+1) = aGFP*TXGFP3(x,y,t) - dGFP*GFP3(x,y,t);
-        end
-    end
+%% plotting helper to see the distribution of GFP over time if ur curious
+%THIS WILL PLOT 25 FIGURES GET READY
+close all
+for i = 1:25
+    figure;
+    mesh(GFP_hour(:,:,i));
 end
 
 
