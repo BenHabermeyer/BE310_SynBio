@@ -134,7 +134,68 @@ for i = 1:25
    plot(line3(1,:,i));
 end
 
+%% manual way of doing it - I haven't implemented this yet but this might be the best way... it's what the lab manual says so idk
+%loop through each of the 25 frames, calling imdistline and improfile to
+
+%first let's look at all of the frames of the video
+close all
+for i = 1:25
+    figure
+    imshow(plateR1(:,:,i));
+end
+
+%ok make the middle line segment PURE WHITE = 1 and use imline
+close all
+lowpix = zeros(1,25);
+hipix = zeros(1,25);
+%skip the first
+for i = 2:25
+    imshow(plateR1(:,:,i));
+    h = imline;
+    lowpix(i) = h.Position(1,2);
+    hipix(i) = h.Position(2,2);
+    %grab the points from h and save them
+    close all
+end
+
+%NOW FOR CLARITY I WILL PLOT A LINE SEGMENT VERTICALLY THROUGH THE CENTER
+%OF THE IMAGE. THE USER WILL THEN SELECT THE LINE SEGMENT CORRESPONDING TO
+%THE EDGE DISTANCE OF THE IMAGE AS CLOSE TO THE LINE AS POSSIBLE FROM WHICH
+%I WILL TAKE THE UPPER AND LOWER Y COORDINATES AS THE UPPER AND LOWER EDGE
+%DISTANCES
 
 
+%% normalize the line segments by subtractng the first line of pixel
+%UNFINISHED THIS IS A BACKUP IN CASE MANUAL SUCKS BUT I HONESTLY THINK
+%MANUAL IS THE WAY TO GO SINCE THE DATA BIGHT BE NOISY
 
+%maybe instead choose some threshold NORMALIZED BY FIRST FRAME to see when
+%brightness increases by a certain percentage or certain amount
+%brightness from all of them
+for i = 1:25
+    line1_norm(:,:,i) = line1(:,:,i) - line1(:,:,1);
+    line2_norm(:,:,i) = line2(:,:,i) - line2(:,:,1);
+    line3_norm(:,:,i) = line3(:,:,i) - line3(:,:,1);
+end
+
+close all
+for i = 1:25
+   figure
+   plot(line1_norm(1,:,i));
+end
+
+%ABSOLUTE THRESHOLD
+abs_thresh = 0.15;
+%find the pixel positions corresponding to the low and high indices where
+%the normalized line segment passes the absolute threshold
+lowpix_abs1 = NaN(1,25);
+hipix_abs1 = NaN(1,25);
+
+for i = 1:25
+    %find the lowest and highest pixels in the line segment above the
+    %threshold
+    
+end
+
+%plot line segments with the plate and line segment to see if it looks good
 
