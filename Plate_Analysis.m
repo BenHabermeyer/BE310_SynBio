@@ -17,11 +17,12 @@ clear PlateData_1s
 sample = data(:,:,25);
 [centers, radii] = imfindcircles(sample, [175 225], ...
     'ObjectPolarity','bright', 'Sensitivity', 0.97);
+%{
 figure
 imshow(sample)
 viscircles(centers, radii, 'Color', 'r')
-viscircles(centers, [200; 200; 200], 'Color', 'b')
-
+%viscircles(centers, [200; 200; 200], 'Color', 'b')
+%}
 %% Segment each plate to be an individual matrix based on the viscircles radius
 %first round the centers and radii
 centers = round(centers);
@@ -31,10 +32,12 @@ radii = round(radii);
 %center accordingly
 %CONVENTION: make the edge of the inner well touch the outsides but make it
 %still a circle so I can mask the other parts
-radii(1) = radii(1) - 3;
+radii(1) = radii(1) - 22;
 plateR1 = data(centers(1,2) - radii(1) : centers(1,2) + radii(1),...
     centers(1,1) - radii(1) : centers(1,1) + radii(1),:);
-%mask out any region which is not in the circle
+%mask out any region which is not in the circle - UNNECESSARY WHEN ALREADY
+%CROPPED AND TAKING LINE SEGMENT ACROSS ENTIRE LENGTH
+%{
 for i = 1:size(plateR1, 1)
     for j = 1:size(plateR1, 2)
         %use the distance formula on i and j indices
@@ -43,30 +46,37 @@ for i = 1:size(plateR1, 1)
         end
     end
 end
+%}
+radii(2) = radii(2) - 17;
 plateR3 = data(centers(2,2) - radii(2) : centers(2,2) + radii(2),...
     centers(2,1) - radii(2) : centers(2,1) + radii(2),:);
+%{
 for i = 1:size(plateR3, 1)
     for j = 1:size(plateR3, 2)
         %use the distance formula on i and j indices
-        if sqrt((i - size(plateR3,1)/2)^2 + (j- size(plateR3,2)/2)^2) > radii(3)
+        if sqrt((i - size(plateR3,1)/2)^2 + (j- size(plateR3,2)/2)^2) > radii(2)
             plateR3(i,j,:) = 0;
         end
     end
 end
-radii(3) = radii(3) - 4;
+%}
+radii(3) = radii(3) - 16;
 plateR2 = data(centers(3,2) - radii(3) : centers(3,2) + radii(3),...
     centers(3,1) - radii(3) : centers(3,1) + radii(3),:);
+%{
 for i = 1:size(plateR2, 1)
     for j = 1:size(plateR2, 2)
         %use the distance formula on i and j indices
-        if sqrt((i - size(plateR2,1)/2)^2 + (j- size(plateR2,2)/2)^2) > radii(2)
+        if sqrt((i - size(plateR2,1)/2)^2 + (j- size(plateR2,2)/2)^2) > radii(3)
             plateR2(i,j,:) = 0;
         end
     end
 end
+%}
 
 %plot the last frame of each to make sure the inside of the well is
 %represented by the circle
+close all
 figure
 imshow(plateR1(:,:,end))
 figure
@@ -96,6 +106,34 @@ max3 = max(plateR3, [], 'all');
 line1 = permute(plateR1(:, ceil(size(plateR1,2)/2), :), [2,1,3]);
 line2 = plateR2(ceil(size(plateR2,1)/2), :, :);
 line3 = permute(plateR3(:, ceil(size(plateR3,2)/2), :), [2,1,3]);
+
+
+%I THINK FIRST WE SHOULD DO THIS VISUALLY TO DETERMINE WHAT FEATURES WE
+%SHOULD BE LOOKING FOR IN DETERMINING GFP EDGE DISTANCE THEN WE CAN
+%AUTOMATE IT FOR THE LINE SEGMENTS
+
+%plot the line segments to see what they look like
+%THIS MAKES 25 FIGURES GET READY
+%{
+close all
+for i = 1:25
+   figure
+   plot(line1(1,:,i));
+end
+%}
+%{
+close all
+for i = 1:25
+   figure
+   plot(line2(1,:,i));
+end
+%}
+close all
+for i = 1:25
+   figure
+   plot(line3(1,:,i));
+end
+
 
 
 
