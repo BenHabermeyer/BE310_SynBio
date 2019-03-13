@@ -64,6 +64,7 @@ n1s = linspace(0.8, 4, howmany);
 rmse1 = NaN(howmany);
 rmse2 = NaN(howmany);
 rmse3 = NaN(howmany);
+sum_rmse(1,howmany) = NaN;
 
 %fill in the RMSE matrix NORMALIZE
 for k = 1:length(KRs)
@@ -75,50 +76,66 @@ for k = 1:length(KRs)
     end
 end
 
-%find the minimum values for each
-[row1, col1] = find(rmse1 == min(rmse1, [], 'all'));
-[row2, col2] = find(rmse2 == min(rmse2, [], 'all'));
-[row3, col3] = find(rmse3 == min(rmse3, [], 'all'));
+for jj = 1:howmany
+    
+    min_rmse1(jj) = min(rmse1(:,jj));
+    min_rmse2(jj) = min(rmse2(:,jj));
+    min_rmse3(jj) = min(rmse3(:,jj));
+    
+end
 
-str1 = strcat('The minimum RMSE for R1 occurred with parameters KR = ', ...
-    num2str(KRs(row1)), ' and n1 = ', num2str(n1s(col1)));
-str2 = strcat('The minimum RMSE for R2 occurred with parameters KR = ', ...
-    num2str(KRs(row2)), ' and n1 = ', num2str(n1s(col2)));
-str3 = strcat('The minimum RMSE for R3 occurred with parameters KR = ', ...
-    num2str(KRs(row3)), ' and n1 = ', num2str(n1s(col3)));
-disp(str1)
-disp(str2)
-disp(str3)
+sum_rmse = min_rmse1 + min_rmse2 + min_rmse3;
+index = find(sum_rmse == min(sum_rmse));
+
+KR1_loc = find(rmse1(:,index) == min(rmse1(:,index)));
+KR2_loc = find(rmse2(:,index) == min(rmse2(:,index))); 
+KR3_loc = find(rmse3(:,index) == min(rmse3(:,index)));
+
+n1 = n1s(index);
+KR1 = KRs(KR1_loc);
+KR2 = KRs(KR2_loc);
+KR3 = KRs(KR3_loc);
+
+
+% str1 = strcat('The minimum RMSE for R1 occurred with parameters KR = ', ...
+%     num2str(KR1, ' and n1 = ', num2str(n1)));
+% str2 = strcat('The minimum RMSE for R2 occurred with parameters KR = ', ...
+%     num2str(KR2, ' and n1 = ', num2str(n1)));
+% str3 = strcat('The minimum RMSE for R3 occurred with parameters KR = ', ...
+%     num2str(KR3, ' and n1 = ', num2str(n1)));
+% disp(str1)
+% disp(str2)
+% disp(str3)
 
 %Overlay plots of RMSE curves and experimental data
 close all
 figure
 subplot(3,1,1)
-r1 = strcat('Model 1 RMSE = ', num2str(min(rmse1, [], 'all')));
+r1 = strcat('Model 1 RMSE = ', num2str(rmse1(index)), [], 'all');
 semilogx(conc, R1./max(R1), '.--', 'MarkerSize', 20, 'LineWidth', 1.5)
 xlim([1E-13, 1E-3])
 hold on
-semilogx(conc, Equation1(KRs(row1), n1s(col1), conc), 'LineWidth', 1.5);
+semilogx(conc, Equation1(KR1, n1, conc), 'LineWidth', 1.5);
 %xlabel('[AHL](M)')
 %ylabel('Normalized fluorescence per OD')
 legend('Experimental data (N=2)', r1, 'Location', 'northwest')
 set(gca, 'FontSize', 14)
 subplot(3,1,2)
-r2 = strcat('Model 2 RMSE = ', num2str(min(rmse2, [], 'all')));
+r2 = strcat('Model 2 RMSE = ', num2str(rmse2(index)), [], 'all');
 semilogx(conc, R2./max(R2), '.--', 'MarkerSize', 20, 'LineWidth', 1.5)
 xlim([1E-13, 1E-3])
 hold on
-semilogx(conc, Equation1(KRs(row2), n1s(col2), conc), 'LineWidth', 1.5);
+semilogx(conc, Equation1(KR2, n1, conc), 'LineWidth', 1.5);
 %xlabel('[AHL](M)')
 ylabel('Normalized fluorescence per OD')
 legend('Experimental data (N=2)', r2, 'Location', 'northwest')
 set(gca, 'FontSize', 14)
 subplot(3,1,3)
-r3 = strcat('Model 3 RMSE = ', num2str(min(rmse3, [], 'all')));
+r3 = strcat('Model 3 RMSE = ', num2str(rmse3(index)), [], 'all');
 semilogx(conc, R3./max(R3), '.--', 'MarkerSize', 20, 'LineWidth', 1.5)
 xlim([1E-13, 1E-3])
 hold on
-semilogx(conc, Equation1(KRs(row3), n1s(col3), conc), 'LineWidth', 1.5);
+semilogx(conc, Equation1(KR3, n1, conc), 'LineWidth', 1.5);
 xlabel('[AHL](M)')
 %ylabel('Normalized fluorescence per OD')
 legend('Experimental data (N=2)', r3, 'Location', 'northwest')
