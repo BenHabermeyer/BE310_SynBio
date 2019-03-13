@@ -89,11 +89,6 @@ pix_per_mm1 = 2*radii(1) / 60;
 pix_per_mm2 = 2*radii(2) / 60;
 pix_per_mm3 = 2*radii(3) / 60;
 
-%find the maximum intensity of GFP and set threshold to this
-max1 = max(plateR1, [], 'all');
-max2 = max(plateR2, [], 'all');
-max3 = max(plateR3, [], 'all');
-
 %% finding edge distance for each plate
 %HOW TO DO THIS: I just made each plate matrix centered on each plate, so
 %just take a line section with pizels horiz, vertical, or diagonal across
@@ -107,10 +102,12 @@ line1 = permute(plateR1(:, ceil(size(plateR1,2)/2), :), [2,1,3]);
 line2 = plateR2(ceil(size(plateR2,1)/2), :, :);
 line3 = permute(plateR3(:, ceil(size(plateR3,2)/2), :), [2,1,3]);
 
-
-%I THINK FIRST WE SHOULD DO THIS VISUALLY TO DETERMINE WHAT FEATURES WE
-%SHOULD BE LOOKING FOR IN DETERMINING GFP EDGE DISTANCE THEN WE CAN
-%AUTOMATE IT FOR THE LINE SEGMENTS
+%first let's look at all of the frames of the video
+close all
+for i = 1:25
+    figure
+    imshow(plateR1(:,:,i));
+end
 
 %plot the line segments to see what they look like
 %THIS MAKES 25 FIGURES GET READY
@@ -121,6 +118,7 @@ for i = 1:25
    plot(line1(1,:,i));
 end
 %}
+
 %{
 close all
 for i = 1:25
@@ -128,22 +126,203 @@ for i = 1:25
    plot(line2(1,:,i));
 end
 %}
+%{
 close all
 for i = 1:25
    figure
    plot(line3(1,:,i));
 end
+%}
 
-%% manual way of doing it - I haven't implemented this yet but this might be the best way... it's what the lab manual says so idk
-%loop through each of the 25 frames, calling imdistline and improfile to
 
-%first let's look at all of the frames of the video
+%% pixel selection method of calculating edge distance
+%How it works: user will be given 9 images on which they will select a
+%pixel they think represents the edge of the GFP. The average of these
+%pixel intensities will be taken as the absolute threshold for brightness.
+%I will be using "normalized" images in which the first frame is subtracted
+%from all the images
+
+%Background subtraction - subtract the first frame from all frames keeping
+%the values minimum 0
+for i = 1:25
+    plateR1_norm(:,:,i) = plateR1(:,:,i) - plateR1(:,:,1);
+    plateR1_norm(plateR1_norm < 0) = 0; 
+    plateR2_norm(:,:,i) = plateR2(:,:,i) - plateR2(:,:,1);
+    plateR2_norm(plateR2_norm < 0) = 0;
+    plateR3_norm(:,:,i) = plateR3(:,:,i) - plateR3(:,:,1);
+    plateR3_norm(plateR3_norm < 0) = 0;
+end
+
+%lets look at it
+%{
 close all
 for i = 1:25
     figure
-    imshow(plateR1(:,:,i));
+    imshow(plateR2_norm(:,:,i));
+end
+%}
+
+
+%plot 9 images, 3 from each normalized plate and select a pixel where you
+%think the edge distance is
+% for plate 1 i will use images 6, 9, and 12
+%for plate 2 I will use 16, 20, 24
+% for plate 3 I will use 16, 20, 24
+pixvals = NaN(1,9);
+for i = 1 : 9
+    if i < 4
+        f = figure;
+        index = 3 + 3*i;
+        imshow(plateR1_norm(:,:,index));
+        [x,y]=ginput(1);
+        close all
+        pixel_x=round(x);
+        pixel_y= round(y);
+        pixvals(i) = plateR1_norm(pixel_y,pixel_x,index);
+    elseif i > 3 && i < 7
+        f = figure;
+        index = 12 + 4*(i-3);
+        imshow(plateR2_norm(:,:,index));
+        [x,y]=ginput(1);
+        close all
+        pixel_x=round(x);
+        pixel_y= round(y);
+        pixvals(i) = plateR2_norm(pixel_y,pixel_x,index);
+    else
+        f = figure;
+        index = 12 + 4*(i-6);
+        imshow(plateR3_norm(:,:,index));
+        [x,y]=ginput(1);
+        close all
+        pixel_x=round(x);
+        pixel_y= round(y);
+        pixvals(i) = plateR3_norm(pixel_y,pixel_x,index);
+    end
 end
 
+%set the threshold
+abs_thresh = mean(pixvals);
+sd_thresh = std(pixvals);
+
+%now create line segments across the centers of the normalized plates
+line1_norm = permute(plateR1_norm(:, ceil(size(plateR1_norm,2)/2), :), [2,1,3]);
+line2_norm = plateR2_norm(ceil(size(plateR2_norm,1)/2), :, :);
+line3_norm = permute(plateR3_norm(:, ceil(size(plateR3_norm,2)/2), :), [2,1,3]);
+
+%now save the first and last points where the intensity is greater than the
+%threshold across each line segment
+line1_hidist = NaN(1,25);
+line1_lodist = NaN(1,25);
+line2_hidist = NaN(1,25);
+line2_lodist = NaN(1,25);
+line3_hidist = NaN(1,25);
+line3_lodist = NaN(1,25);
+
+%create a matrix to index into relating distances from center to indices
+%I'll just make these negative to positive but then take the abs() when I
+%use
+distances1 = linspace(-30, 30, length(line1_norm));
+distances2 = linspace(-30, 30, length(line2_norm));
+distances3 = linspace(-30, 30, length(line3_norm));
+
+for i = 1:25
+    %find where pixel is greater than threshold
+    firstind = find(line1_norm(:,:,i) > abs_thresh, 1, 'first');
+    lastind = find(line1_norm(:,:,i) > abs_thresh, 1, 'last');
+    %check if they're empty
+    if isempty(firstind)
+        firstval = 0;
+    else 
+        firstval = abs(distances1(firstind));
+    end
+    if isempty(lastind)
+        lastval = 0;
+    else
+        lastval = abs(distances1(lastind));
+    end
+    %now set the lower and upper values accordingly
+    line1_hidist(i) = max([firstval, lastval]);
+    line1_lodist(i) = min([firstval, lastval]);
+    
+    %rinse and repeat
+    
+    %find where pixel is greater than threshold
+    firstind = find(line2_norm(:,:,i) > abs_thresh, 1, 'first');
+    lastind = find(line2_norm(:,:,i) > abs_thresh, 1, 'last');
+    %check if they're empty
+    if isempty(firstind)
+        firstval = 0;
+    else 
+        firstval = abs(distances2(firstind));
+    end
+    if isempty(lastind)
+        lastval = 0;
+    else
+        lastval = abs(distances2(lastind));
+    end
+    %now set the lower and upper values accordingly
+    line2_hidist(i) = max([firstval, lastval]);
+    line2_lodist(i) = min([firstval, lastval]);
+    
+    %find where pixel is greater than threshold
+    firstind = find(line3_norm(:,:,i) > abs_thresh, 1, 'first');
+    lastind = find(line3_norm(:,:,i) > abs_thresh, 1, 'last');
+    %check if they're empty
+    if isempty(firstind)
+        firstval = 0;
+    else 
+        firstval = abs(distances3(firstind));
+    end
+    if isempty(lastind)
+        lastval = 0;
+    else
+        lastval = abs(distances3(lastind));
+    end
+    %now set the lower and upper values accordingly
+    line3_hidist(i) = max([firstval, lastval]);
+    line3_lodist(i) = min([firstval, lastval]); 
+end
+
+%plot to see what it looks like
+close all
+time = 0:24;
+figure
+subplot(3,1,1)
+plot(time, line1_lodist)
+hold on
+plot(time, line1_hidist)
+hold off
+legend("low", "high", 'Location', 'northwest')
+ylim([0 30])
+title("R1")
+set(gca, 'FontSize', 14)
+subplot(3,1,2)
+plot(time, line2_lodist)
+hold on
+plot(time, line2_hidist)
+hold off
+legend("low", "high", 'Location', 'northwest')
+title("R2")
+ylim([0 30])
+ylabel("Distance (mm)")
+set(gca, 'FontSize', 14)
+subplot(3,1,3)
+plot(time, line3_lodist)
+hold on
+plot(time, line3_hidist)
+hold off
+legend("low", "high", 'Location', 'northwest')
+title("R3")
+ylim([0 30])
+xlabel("Time (hr)")
+set(gca, 'FontSize', 14)
+
+%lastly save the data
+
+%% Manual line segment selection - second way of doing it if the other doesn't work
+%we will do this 2 ways: in this way select a line segment along the white
+%line through the center of the plate such that the ends are along the edge
+%distance
 %ok make the middle line segment PURE WHITE = 1 and use imline
 close all
 lowpix = zeros(1,25);
@@ -163,39 +342,3 @@ end
 %THE EDGE DISTANCE OF THE IMAGE AS CLOSE TO THE LINE AS POSSIBLE FROM WHICH
 %I WILL TAKE THE UPPER AND LOWER Y COORDINATES AS THE UPPER AND LOWER EDGE
 %DISTANCES
-
-
-%% normalize the line segments by subtractng the first line of pixel
-%UNFINISHED THIS IS A BACKUP IN CASE MANUAL SUCKS BUT I HONESTLY THINK
-%MANUAL IS THE WAY TO GO SINCE THE DATA BIGHT BE NOISY
-
-%maybe instead choose some threshold NORMALIZED BY FIRST FRAME to see when
-%brightness increases by a certain percentage or certain amount
-%brightness from all of them
-for i = 1:25
-    line1_norm(:,:,i) = line1(:,:,i) - line1(:,:,1);
-    line2_norm(:,:,i) = line2(:,:,i) - line2(:,:,1);
-    line3_norm(:,:,i) = line3(:,:,i) - line3(:,:,1);
-end
-
-close all
-for i = 1:25
-   figure
-   plot(line1_norm(1,:,i));
-end
-
-%ABSOLUTE THRESHOLD
-abs_thresh = 0.15;
-%find the pixel positions corresponding to the low and high indices where
-%the normalized line segment passes the absolute threshold
-lowpix_abs1 = NaN(1,25);
-hipix_abs1 = NaN(1,25);
-
-for i = 1:25
-    %find the lowest and highest pixels in the line segment above the
-    %threshold
-    
-end
-
-%plot line segments with the plate and line segment to see if it looks good
-
