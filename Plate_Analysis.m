@@ -319,26 +319,30 @@ set(gca, 'FontSize', 14)
 
 %lastly save the data
 
-%% Manual line segment selection - second way of doing it if the other doesn't work
-%we will do this 2 ways: in this way select a line segment along the white
-%line through the center of the plate such that the ends are along the edge
-%distance
-%ok make the middle line segment PURE WHITE = 1 and use imline
-close all
-lowpix = zeros(1,25);
-hipix = zeros(1,25);
-%skip the first
-for i = 2:25
-    imshow(plateR1(:,:,i));
-    h = imline;
-    lowpix(i) = h.Position(1,2);
-    hipix(i) = h.Position(2,2);
-    %grab the points from h and save them
-    close all
-end
+%% Multiple line segment selection - second way of doing it
+%selects 4 line segments along each of the cardinal axes - then calculate 8
+%edge distances based on these distances
 
-%NOW FOR CLARITY I WILL PLOT A LINE SEGMENT VERTICALLY THROUGH THE CENTER
-%OF THE IMAGE. THE USER WILL THEN SELECT THE LINE SEGMENT CORRESPONDING TO
-%THE EDGE DISTANCE OF THE IMAGE AS CLOSE TO THE LINE AS POSSIBLE FROM WHICH
-%I WILL TAKE THE UPPER AND LOWER Y COORDINATES AS THE UPPER AND LOWER EDGE
-%DISTANCES
+%calculate the vertical and horixontal line segments, orienting them from
+%left -> right center -> outwards. All matrices will start with the center
+%point as the first element. %data will be represented as a vector of size
+%1 x n x 25
+
+%start with the vertical and horizontal lines - call these N,S,E,W
+plateR1_n = flip(permute(plateR1(1:radii(1) + 1, radii(1) + 1, :), [2 1 3]), 2);
+plateR1_s = permute(plateR1(radii(1) + 1:end, radii(1) + 1, :), [2 1 3]);
+plateR1_e = plateR1(radii(1) + 1, radii(1) + 1:end, :);
+plateR1_w = flip(plateR1(radii(1) + 1, 1:radii(1) + 1, :));
+plateR2_n = flip(permute(plateR2(1:radii(3) + 1, radii(3) + 1, :), [2 1 3]), 2);
+plateR2_s = permute(plateR2(radii(3) + 1:end, radii(3) + 1, :), [2 1 3]);
+plateR2_e = plateR2(radii(3) + 1, radii(3) + 1:end, :);
+plateR2_w = flip(plateR2(radii(3) + 1, 1:radii(3) + 1, :));
+plateR3_n = flip(permute(plateR3(1:radii(2) + 1, radii(2) + 1, :), [2 1 3]), 2);
+plateR3_s = permute(plateR3(radii(2) + 1:end, radii(2) + 1, :), [2 1 3]);
+plateR3_e = plateR3(radii(2) + 1, radii(2) + 1:end, :);
+plateR3_w = flip(plateR3(radii(2) + 1, 1:radii(2) + 1, :));
+
+%create the xgrids to relate index to edge distance for each of the plates
+xgrid1 = linspace(0, 30, size(plateR1_n,2));
+xgrid2 = linspace(0, 30, size(plateR2_n,2));
+xgrid3 = linspace(0, 30, size(plateR3_n,2));
