@@ -111,7 +111,7 @@ KR3 = KRs(KR3_loc);
 close all
 figure
 subplot(3,1,1)
-r1 = strcat('Model 1 RMSE = ', num2str(rmse1(index)), [], 'all');
+r1 = strcat('Model 1 RMSE = ', num2str(rmse1(KR1_loc,index)), [], 'all');
 semilogx(conc, R1./max(R1), '.--', 'MarkerSize', 20, 'LineWidth', 1.5)
 xlim([1E-13, 1E-3])
 hold on
@@ -121,7 +121,7 @@ semilogx(conc, Equation1(KR1, n1, conc), 'LineWidth', 1.5);
 legend('Experimental data (N=2)', r1, 'Location', 'northwest')
 set(gca, 'FontSize', 14)
 subplot(3,1,2)
-r2 = strcat('Model 2 RMSE = ', num2str(rmse2(index)), [], 'all');
+r2 = strcat('Model 2 RMSE = ', num2str(rmse2(KR2_loc,index)), [], 'all');
 semilogx(conc, R2./max(R2), '.--', 'MarkerSize', 20, 'LineWidth', 1.5)
 xlim([1E-13, 1E-3])
 hold on
@@ -131,7 +131,7 @@ ylabel('Normalized fluorescence per OD')
 legend('Experimental data (N=2)', r2, 'Location', 'northwest')
 set(gca, 'FontSize', 14)
 subplot(3,1,3)
-r3 = strcat('Model 3 RMSE = ', num2str(rmse3(index)), [], 'all');
+r3 = strcat('Model 3 RMSE = ', num2str(rmse3(KR3_loc,index)), [], 'all');
 semilogx(conc, R3./max(R3), '.--', 'MarkerSize', 20, 'LineWidth', 1.5)
 xlim([1E-13, 1E-3])
 hold on
