@@ -163,7 +163,12 @@ TXGFP1 = zeros(n, n, 2);
 GFP1 = zeros(n, n, 2);
 
 %get 2D GFP expression at only 25 times
-time_indices = linspace(1, length(time), 25);
+time_indices(1:24) = 0;
+time_indices(1) = 0.5;
+for jj = 2:24
+    time_indices(jj) = time_indices(jj-1) + 1;
+end
+time_indices = 60.*time_indices/0.15;
 GFP_hour = zeros(n, n, 25);
 GFP_index = 1;
 
@@ -184,12 +189,12 @@ for t = 1 : length(time) - 1
     
     %reset t index 1 for R1 and TXGFP by setting the first z stack
     %to be the second
-    R1(:,:,1) = R1(:,:,2);
-    TXGFP1(:,:,1) = TXGFP1(:,:,2);
-    GFP1(:,:,1) = GFP1(:,:,2);
+    R1(:,:,1) = R1(:,:,2) + R1(:,:,1);
+    TXGFP1(:,:,1) = TXGFP1(:,:,2) + TXGFP1(:,:,1);
+    GFP1(:,:,1) = GFP1(:,:,2) + GFP1(:,:,1);
 end
 %set the final time point
-GFP_hour(:,:,25) = GFP1(:,:,2);
+GFP_hour(:,:,24) = GFP1(:,:,2);
 
 %since diffusion will be symmetrical in all directions, do the same thing
 %as in M1 - look in the positive X direction only along the middle of the
@@ -215,8 +220,8 @@ title('Strain R1')
 
 %% plotting helper to see the distribution of GFP over time if ur curious
 %THIS WILL PLOT 25 FIGURES GET READY
-close all
-for i = 1:25
-    figure;
-    mesh(GFP_hour(:,:,i));
-end
+% close all
+% for i = 1:25
+%     figure;
+%     mesh(GFP_hour(:,:,i));
+% end

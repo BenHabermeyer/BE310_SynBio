@@ -88,6 +88,100 @@ xgrid1 = linspace(0, 30, size(plateR1_n,2));
 xgrid2 = linspace(0, 30, size(plateR2_n,2));
 xgrid3 = linspace(0, 30, size(plateR3_n,2));
 
+for i = 1:24
+plateR1_e(1, :, i) = smoothdata(plateR1_e(1, :, i));
+plateR1_n(1, :, i) = smoothdata(plateR1_n(1, :, i));
+plateR1_w(1, :, i) = smoothdata(plateR1_w(1, :, i));
+plateR1_s(1, :, i) = smoothdata(plateR1_s(1, :, i));
+
+plateR2_e(1, :, i) = smoothdata(plateR2_e(1, :, i));
+plateR2_n(1, :, i) = smoothdata(plateR2_n(1, :, i));
+plateR2_w(1, :, i) = smoothdata(plateR2_w(1, :, i));
+plateR2_s(1, :, i) = smoothdata(plateR2_s(1, :, i));
+
+plateR3_e(1, :, i) = smoothdata(plateR3_e(1, :, i));
+plateR3_n(1, :, i) = smoothdata(plateR3_n(1, :, i));
+plateR3_w(1, :, i) = smoothdata(plateR3_w(1, :, i));
+plateR3_s(1, :, i) = smoothdata(plateR3_s(1, :, i));
+end
+
+%% Calculate edge distance
+
+edge_distanceR1 = zeros(1, 24);
+edge_distanceR2 = zeros(1, 24);
+edge_distanceR3 = zeros(1, 24);
+
+%first edge distance is 0
+edge_distanceR1e(1) = 0;
+edge_distanceR1n(1) = 0;
+edge_distanceR1w(1) = 0;
+edge_distanceR1s(1) = 0;
+edge_distanceR2e(1) = 0;
+edge_distanceR2n(1) = 0;
+edge_distanceR2w(1) = 0;
+edge_distanceR2s(1) = 0;
+edge_distanceR3e(1) = 0;
+edge_distanceR3n(1) = 0;
+edge_distanceR3w(1) = 0;
+edge_distanceR3s(1) = 0;
+
+for i = 2:24
+    sec_deriv_R1e = gradient(gradient(plateR1_e(1, :, i)));
+    edge_distanceR1e(i) = xgrid1(find(sec_deriv_R1e == max(sec_deriv_R1e),1,'first'));
+    sec_deriv_R1n = gradient(gradient(plateR1_n(1, :, i)));
+    edge_distanceR1n(i) = xgrid1(find(sec_deriv_R1n == max(sec_deriv_R1n),1,'first'));
+    sec_deriv_R1w = gradient(gradient(plateR1_w(1, :, i)));
+    edge_distanceR1w(i) = xgrid1(find(sec_deriv_R1w == max(sec_deriv_R1w),1,'first'));
+    sec_deriv_R1s = gradient(gradient(plateR1_s(1, :, i)));
+    edge_distanceR1s(i) = xgrid1(find(sec_deriv_R1s == max(sec_deriv_R1s),1,'first'));
+    
+    sec_deriv_R2e = gradient(gradient(plateR2_e(1, :, i)));
+    edge_distanceR2e(i) = xgrid2(find(sec_deriv_R2e == max(sec_deriv_R2e),1,'first'));
+    sec_deriv_R2n = gradient(gradient(plateR2_n(1, :, i)));
+    edge_distanceR2n(i) = xgrid2(find(sec_deriv_R2n == max(sec_deriv_R2n),1,'first'));
+    sec_deriv_R2w = gradient(gradient(plateR2_w(1, :, i)));
+    edge_distanceR2w(i) = xgrid2(find(sec_deriv_R2w == max(sec_deriv_R2w),1,'first'));
+    sec_deriv_R2s = gradient(gradient(plateR2_s(1, :, i)));
+    edge_distanceR2s(i) = xgrid2(find(sec_deriv_R2s == max(sec_deriv_R2s),1,'first'));
+        
+    sec_deriv_R3e = gradient(gradient(plateR3_e(1, :, i)));
+    edge_distanceR3e(i) = xgrid3(find(sec_deriv_R3e == max(sec_deriv_R3e),1,'first'));
+    sec_deriv_R3n = gradient(gradient(plateR3_n(1, :, i)));
+    edge_distanceR3n(i) = xgrid3(find(sec_deriv_R3n == max(sec_deriv_R3n),1,'first'));
+    sec_deriv_R3w = gradient(gradient(plateR3_w(1, :, i)));
+    edge_distanceR3w(i) = xgrid3(find(sec_deriv_R3w == max(sec_deriv_R3w),1,'first'));
+    sec_deriv_R3s = gradient(gradient(plateR3_s(1, :, i)));
+    edge_distanceR3s(i) = xgrid3(find(sec_deriv_R3s == max(sec_deriv_R3s),1,'first'));
+end
+
+%Average edge distance by the number of line segments taken. For
+%edge_distance R2 and R3, the northern segment is removed due to
+%interference of plate writing.
+edge_distanceR1_T2 = (edge_distanceR1e+edge_distanceR1n+edge_distanceR1w+edge_distanceR1s)/4;
+edge_distanceR2_T2 = (edge_distanceR2e+edge_distanceR2w+edge_distanceR2s)/3;
+edge_distanceR3_T2 = (edge_distanceR3n+edge_distanceR3w+edge_distanceR3s)/3;
+
+%%
+subplot(1,3,1)
+
+plot(edge_distanceR1_T2,'o', 'MarkerFaceColor', 'k');
+title('Edge Distance for R1');
+xlabel('Time (hours)')
+ylabel('Edge Distance (mm)');
+
+subplot(1,3,2)
+
+plot(edge_distanceR2_T2,'o', 'MarkerFaceColor', 'k');
+title('Edge Distance for R2');
+xlabel('Time (hours)')
+ylabel('Edge Distance (mm)');
+
+subplot(1,3,3)
+
+plot(edge_distanceR3_T2,'o', 'MarkerFaceColor', 'k');
+title('Edge Distance for R3');
+xlabel('Time (hours)')
+ylabel('Edge Distance (mm)');
 
 
 
