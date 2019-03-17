@@ -1,19 +1,11 @@
-function [nrmse] = modelVerification(AHL,pR,KR,exp_Data)
+function [nrmse] = modelVerification(AHL,pR,dR,KR,LuxR,aGFP,dGFP, aTXGFP,dTXGFP,exp_Data)
 
 %Function that takes in 2D profile of AHL, and finds the value of pR and KR
 %such that the NRMSE between the GFP model and the edge distance dervied
 %from the image analysis is minimized.
 
-pR = pR; %uM^-3/min
-dR = 0.0231; %1/min
-KR = KR; %uM
 n = 201;
 n1 = 1.1727;
-LuxR = 0.1; %uM
-aGFP = 2; %1/min
-dGFP = 4E-4; %1/min
-aTXGFP = 0.05; %uM/min
-dTXGFP = 0.2; %1/min
 
 Radius_Plate = 30;
 dx = 2*Radius_Plate / (n-1);
@@ -70,7 +62,10 @@ for t = 1 : length(time) - 1
     
     %reset t index 1 for R1 and TXGFP by setting the first z stack
     %to be the second
-     R1(:,:,1) = R1(:,:,2) + R1(:,:,1);
+    
+    %Sum the differential change in GFP (dGFP/dt) in the second stack and...
+    ...the previous value.
+    R1(:,:,1) = R1(:,:,2) + R1(:,:,1);
     TXGFP1(:,:,1) = TXGFP1(:,:,2) + TXGFP1(:,:,1);
     GFP1(:,:,1) = GFP1(:,:,2) + GFP1(:,:,1);
 end
