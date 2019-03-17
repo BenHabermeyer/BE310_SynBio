@@ -119,24 +119,18 @@ end
 
 close all
 figure
-subplot(3,1,1)
-plot(time(1:7*end/8) / 60, edge1(1:7*end/8))
-xlim([0 21])
-title("R1")
-set(gca, 'FontSize', 14)
-subplot(3,1,2)
-plot(time(1:7*end/8) / 60, edge2(1:7*end/8))
-xlim([0 21])
-ylim([0 30])
-title("R2")
-set(gca, 'FontSize', 14)
+plot(time(1:100:8401) / 60, smooth(edge1(1:100:8401)), "LineWidth", 2)
+hold on
+plot(time(1:100:8401) / 60, smooth(edge2(1:100:8401)), "LineWidth", 2)
+ylim([0 31])
 ylabel("AHL edge distance from center (mm)")
-subplot(3,1,3)
-plot(time(1:7*end/8) / 60, edge3(1:7*end/8))
-title("R3")
+plot(time(1:100:8401) / 60, smooth(edge3(1:100:8401)), "LineWidth", 2)
 xlabel("Time (hr)")
 set(gca, 'FontSize', 14)
 xlim([0 21])
+legend("R1", "R2", "R3", "Location", 'northwest')
+xticks([0 3 6 9 12 15 18 21])
+xticklabels({'0','3','6','9','12','15','18','21'})
 
 %NOTE: plot 2 does not reach 30cm. use figure; plot(time, squeeze(AHL(167, 101, :)))
 %to see why - concentration increases then decreases below the "edge
